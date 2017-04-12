@@ -37,26 +37,26 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell()
         
-       // let cell = tableView.dequeueReusableCell(withIdentifier: "rows", for: indexPath) as! CustemCellTableViewCell
-        
         let task = tasks[indexPath.row]
         
+        //if the task is important
         if task.isImportant {
             cell.textLabel?.text = "❗️\(task.name!)"
         } else {
             cell.textLabel?.text = task.name!
         }
+        // if the task is completed
         
         if task.isCompleted {
             cell.textLabel?.textColor = UIColor.gray
             cell.textLabel?.font = UIFont.italicSystemFont(ofSize: 20)
         }
         
-        
         return cell
         
     }
     
+    // get data from CoreData 
     func getData() {
         let contex = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
         
@@ -68,31 +68,10 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             }
     }
     
-/*    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-       
-        let contex = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-        
-        if editingStyle == .delete {
-            let task = tasks[indexPath.row]
-            contex.delete(task)
-            (UIApplication.shared.delegate as! AppDelegate).saveContext()
-            do {
-                tasks = try contex.fetch(Task.fetchRequest())
-            } catch
-                {
-                print("Fetching Feiled")
-
-                }
-            tableView.reloadData()
-        }
-
-        
-    }*/
     
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
         
-        
-        
+        // action title can be Done or Redo
         var actionTitle : String
         
         let task = self.tasks[indexPath.row]
@@ -102,8 +81,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         } else {
             actionTitle = "Done"
         }
-
-        
+        // if a task is done
         let doneAction = UITableViewRowAction(style: .default, title: actionTitle) { (action, indexPath) in
             if actionTitle == "Done" {
                 task.isCompleted = true
@@ -119,7 +97,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             doneAction.backgroundColor = #colorLiteral(red: 0.1019607857, green: 0.2784313858, blue: 0.400000006, alpha: 1)
         }
         
-        
+        // delete a task from the todo list
         let deleteAction = UITableViewRowAction(style: .destructive, title: "Delete") { (action, indexPath) in
             let contex = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
            
@@ -129,17 +107,40 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             do {
                 self.tasks = try contex.fetch(Task.fetchRequest())
             } catch
-            {
+                    {
                 print("Fetching Feiled")
                 
-            }
+                }
             tableView.reloadData()
 
         }
         
-        return [doneAction,deleteAction]
+        // edit a task 
+        let editAction = UITableViewRowAction(style: .default, title: "Edit") { (action, indexPath) in
+            
+            //instantiate the view controller with storyboard ID
+            let vc = self.storyboard?.instantiateViewController(withIdentifier: "TaskDetailViewController") as! AddTaskViewController
+            self.present(vc, animated: true, completion: {
+                
+                let task = self.tasks[indexPath.row]
+                vc.textField.text = task.name
+                vc.taskNotesField.text = task.notes
+                vc.isImportant.setOn(task.isImportant, animated: true)
+                vc.navigationItem.title = "Edit a Task"
+                vc.btn.titleLabel?.text = "UPDATE"
+                vc.editMode = true
+                vc.index = indexPath.row
+                
+            })
+            tableView.reloadData()
+
+        }
+
+        editAction.backgroundColor = #colorLiteral(red: 0.1927247376, green: 0.3953451907, blue: 1, alpha: 1)
+        return [doneAction,deleteAction, editAction]
     }
-}
+    
+ }
  
     
     
